@@ -33,8 +33,8 @@
 
         #noButton {
             z-index: 50;
-            /* ปรับ transition ให้สั้นลงเพื่อให้หนีทันใจและไม่แล็กออกนอกขอบ */
-            transition: left 0.15s ease-out, top 0.15s ease-out;
+            /* ปรับ transition ให้เร็วขึ้นเพื่อให้หนีทันที */
+            transition: left 0.1s ease-out, top 0.1s ease-out;
             touch-action: none;
         }
         
@@ -98,32 +98,32 @@
     <script>
         const noButton = document.getElementById('noButton');
         const yesButton = document.getElementById('yesButton');
+        const mainCard = document.getElementById('main-card');
         const successScreen = document.getElementById('success-screen');
         const heartContainer = document.getElementById('heart-container');
 
-        // ฟังก์ชันสุ่มตำแหน่งปุ่ม No ให้รัดกุมไม่ให้ออกนอกจอ
+        // ฟังก์ชันสุ่มตำแหน่งปุ่ม No ให้จำกัดอยู่แค่ในกรอบ Main Card
         const moveNoButton = () => {
-            // บังคับใช้ fixed ทันทีที่มีการเคลื่อนไหว
             if (noButton.style.position !== 'fixed') {
                 noButton.style.position = 'fixed';
             }
             
-            // ใช้ getBoundingClientRect เพื่อค่าที่แม่นยำของขนาดปุ่ม
-            const rect = noButton.getBoundingClientRect();
-            const btnWidth = rect.width;
-            const btnHeight = rect.height;
+            // ดึงขอบเขตของกล่องข้อความตรงกลาง
+            const cardRect = mainCard.getBoundingClientRect();
+            const btnRect = noButton.getBoundingClientRect();
             
-            // ระยะห่างขั้นต่ำจากขอบจอ (Safety margin)
-            const margin = 20;
-            
-            // คำนวณพื้นที่ที่สามารถวางปุ่มได้ (Viewport width/height - ขนาดปุ่ม - ระยะเผื่อ)
-            const availWidth = window.innerWidth - btnWidth - (margin * 2);
-            const availHeight = window.innerHeight - btnHeight - (margin * 2);
+            // กำหนด Margin เล็กน้อยไม่ให้ปุ่มทับขอบกล่องเกินไป
+            const padding = 15;
 
-            // สุ่มพิกัด X และ Y โดยให้อยู่ในช่วงพื้นที่ที่คำนวณไว้
-            // และบวก margin กลับเข้าไปเพื่อให้ไม่ติดขอบบน/ซ้าย
-            const newX = Math.floor(Math.random() * availWidth) + margin;
-            const newY = Math.floor(Math.random() * availHeight) + margin;
+            // คำนวณขอบเขตที่ปุ่มสามารถอยู่ได้ (ต้องอยู่ภายในพิกัดของ Card)
+            const minX = cardRect.left + padding;
+            const maxX = cardRect.right - btnRect.width - padding;
+            const minY = cardRect.top + padding;
+            const maxY = cardRect.bottom - btnRect.height - padding;
+
+            // สุ่มตำแหน่งใหม่ในช่วงที่กำหนด
+            const newX = Math.floor(Math.random() * (maxX - minX)) + minX;
+            const newY = Math.floor(Math.random() * (maxY - minY)) + minY;
 
             noButton.style.left = `${newX}px`;
             noButton.style.top = `${newY}px`;
@@ -133,13 +133,13 @@
         noButton.addEventListener('mouseover', moveNoButton);
         noButton.addEventListener('mouseenter', moveNoButton);
         
-        // กันเหนียวสำหรับคนคลิกไว
+        // กันคนคลิกไว
         noButton.addEventListener('click', (e) => {
             e.preventDefault();
             moveNoButton();
         });
         
-        // สำหรับหน้าจอสัมผัส (Mobile)
+        // สำหรับหน้าจอสัมผัส
         noButton.addEventListener('touchstart', (e) => {
             e.preventDefault(); 
             moveNoButton();
