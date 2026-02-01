@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Will You Be My Valentine?</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&family=Short+Stack&display=swap');
+        
+        body {
+            font-family: 'Prompt', sans-serif;
+            overflow: hidden;
+            background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%);
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .heart {
+            position: absolute;
+            color: #ff4081;
+            opacity: 0.6;
+            pointer-events: none;
+            animation: float 6s linear infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+        }
+
+        #noButton {
+            z-index: 50;
+            /* ปรับ transition ให้สั้นลงเพื่อให้หนีทันใจและไม่แล็กออกนอกขอบ */
+            transition: left 0.15s ease-out, top 0.15s ease-out;
+            touch-action: none;
+        }
+        
+        .container-box {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border: 2px solid white;
+        }
+
+        .scale-up {
+            animation: scaleUp 0.5s ease-out forwards;
+        }
+
+        @keyframes scaleUp {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center">
+
+    <!-- พื้นหลังหัวใจลอย -->
+    <div id="heart-container"></div>
+
+    <!-- Main Content -->
+    <div id="main-card" class="container-box p-8 md:p-12 rounded-3xl shadow-2xl text-center max-w-lg w-full relative z-10 scale-up">
+        <div id="image-container" class="mb-6 text-6xl">
+            💝
+        </div>
+        
+        <h1 id="question" class="text-3xl md:text-5xl font-bold text-pink-600 mb-8 leading-tight">
+            Will you be my valentine?
+        </h1>
+
+        <!-- จัดวางปุ่ม: Yes อยู่นิ่งๆ ทางซ้าย, No เริ่มต้นทางขวา -->
+        <div class="flex flex-row items-center justify-center gap-8 h-20 relative">
+            <!-- ปุ่ม Yes: อยู่นิ่งถาวร -->
+            <button id="yesButton" 
+                    class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-10 rounded-full shadow-lg transition-transform active:scale-95 z-20">
+                Yes
+            </button>
+
+            <!-- คอนเทนเนอร์สำหรับปุ่ม No เพื่อรักษา Layout ตอนเริ่มต้น -->
+            <div id="no-container" class="w-32 h-12 flex items-center justify-center">
+                <button id="noButton" 
+                        class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 px-10 rounded-full shadow-lg cursor-default">
+                    No
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Message -->
+    <div id="success-screen" class="hidden fixed inset-0 flex flex-col items-center justify-center bg-pink-100 z-50 p-6 text-center">
+        <div class="text-8xl mb-6">🎉</div>
+        <h2 class="text-4xl md:text-6xl font-bold text-pink-600 mb-4">Yay! I knew it! ❤️</h2>
+        <p class="text-xl text-pink-500">I love you so much!</p>
+        <button onclick="location.reload()" class="mt-8 text-pink-400 underline cursor-pointer">ลองอีกครั้ง</button>
+    </div>
+
+    <script>
+        const noButton = document.getElementById('noButton');
+        const yesButton = document.getElementById('yesButton');
+        const successScreen = document.getElementById('success-screen');
+        const heartContainer = document.getElementById('heart-container');
+
+        // ฟังก์ชันสุ่มตำแหน่งปุ่ม No ให้รัดกุมไม่ให้ออกนอกจอ
+        const moveNoButton = () => {
+            // บังคับใช้ fixed ทันทีที่มีการเคลื่อนไหว
+            if (noButton.style.position !== 'fixed') {
+                noButton.style.position = 'fixed';
+            }
+            
+            // ใช้ getBoundingClientRect เพื่อค่าที่แม่นยำของขนาดปุ่ม
+            const rect = noButton.getBoundingClientRect();
+            const btnWidth = rect.width;
+            const btnHeight = rect.height;
+            
+            // ระยะห่างขั้นต่ำจากขอบจอ (Safety margin)
+            const margin = 20;
+            
+            // คำนวณพื้นที่ที่สามารถวางปุ่มได้ (Viewport width/height - ขนาดปุ่ม - ระยะเผื่อ)
+            const availWidth = window.innerWidth - btnWidth - (margin * 2);
+            const availHeight = window.innerHeight - btnHeight - (margin * 2);
+
+            // สุ่มพิกัด X และ Y โดยให้อยู่ในช่วงพื้นที่ที่คำนวณไว้
+            // และบวก margin กลับเข้าไปเพื่อให้ไม่ติดขอบบน/ซ้าย
+            const newX = Math.floor(Math.random() * availWidth) + margin;
+            const newY = Math.floor(Math.random() * availHeight) + margin;
+
+            noButton.style.left = `${newX}px`;
+            noButton.style.top = `${newY}px`;
+        };
+
+        // เมื่อเมาส์เคลื่อนเข้ามาใกล้หรือโดนปุ่ม No
+        noButton.addEventListener('mouseover', moveNoButton);
+        noButton.addEventListener('mouseenter', moveNoButton);
+        
+        // กันเหนียวสำหรับคนคลิกไว
+        noButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            moveNoButton();
+        });
+        
+        // สำหรับหน้าจอสัมผัส (Mobile)
+        noButton.addEventListener('touchstart', (e) => {
+            e.preventDefault(); 
+            moveNoButton();
+        }, { passive: false });
+
+        // เมื่อกดปุ่ม Yes
+        yesButton.addEventListener('click', () => {
+            successScreen.classList.remove('hidden');
+            createFirework();
+        });
+
+        // สร้างหัวใจลอยเป็นพื้นหลัง
+        const createHeart = () => {
+            const heart = document.createElement('div');
+            heart.classList.add('heart');
+            heart.innerHTML = '❤️';
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
+            heart.style.animationDuration = (Math.random() * 3 + 3) + 's';
+            heartContainer.appendChild(heart);
+
+            setTimeout(() => {
+                heart.remove();
+            }, 6000);
+        };
+
+        setInterval(createHeart, 400);
+
+        // เอฟเฟกต์เฉลิมฉลอง
+        function createFirework() {
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const petal = document.createElement('div');
+                    petal.innerHTML = '🌸';
+                    petal.style.position = 'fixed';
+                    petal.style.left = '50%';
+                    petal.style.top = '50%';
+                    petal.style.fontSize = '24px';
+                    petal.style.pointerEvents = 'none';
+                    petal.style.zIndex = '100';
+                    
+                    const angle = Math.random() * Math.PI * 2;
+                    const velocity = 5 + Math.random() * 10;
+                    const vx = Math.cos(angle) * velocity;
+                    const vy = Math.sin(angle) * velocity;
+                    
+                    let x = window.innerWidth / 2;
+                    let y = window.innerHeight / 2;
+                    
+                    document.body.appendChild(petal);
+                    
+                    let opacity = 1;
+                    const animate = () => {
+                        x += vx;
+                        y += vy;
+                        opacity -= 0.02;
+                        petal.style.left = x + 'px';
+                        petal.style.top = y + 'px';
+                        petal.style.opacity = opacity;
+                        
+                        if (opacity > 0) {
+                            requestAnimationFrame(animate);
+                        } else {
+                            petal.remove();
+                        }
+                    };
+                    animate();
+                }, i * 20);
+            }
+        }
+    </script>
+</body>
+</html>
